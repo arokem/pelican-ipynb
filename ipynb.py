@@ -148,14 +148,13 @@ class IPythonNB(BaseReader):
             # Load metadata from ipython notebook file
             ipynb_file = open(filepath)
             metadata = json.load(ipynb_file)['metadata']
-
             # Fix metadata to pelican standards
             for key, value in metadata.items():
                 del metadata[key]
                 key = key.lower()
                 metadata[key] = self.process_metadata(key, value)
-        metadata['ipython'] = True
 
+        metadata['ipython'] = True
         # Convert ipython notebook to html
         config = Config({'CSSHTMLHeaderTransformer': {'enabled': True,
                          'highlight_class': '.highlight-ipynb'}})
@@ -165,15 +164,15 @@ class IPythonNB(BaseReader):
         content, info = exporter.from_filename(filepath)
 
         if BeautifulSoup:
-            soup = BeautifulSoup(content)
-            for i in soup.findAll("div", {"class" : "input"}):
+           soup = BeautifulSoup(content)
+           for i in soup.findAll("div", {"class" : "input"}):
                 if i.findChildren()[1].find(text='#ignore') is not None:
                     i.extract()
         else:
             soup = content
 
         # Process using Pelican HTMLReader
-        content = '<body>{0}</body>'.format(soup)  # So Pelican HTMLReader works
+        content = '<body>' + soup + '</body>'  # So Pelican HTMLReader works
         parser = MyHTMLParser(self.settings, filename)
         parser.feed(content)
         parser.close()
@@ -185,17 +184,18 @@ class IPythonNB(BaseReader):
         # Remove some CSS styles, so it doesn't break the themes.
         def filter_tags(style_text):
             style_list = style_text.split('\n')
-            exclude = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'ul', 'ol', 'li',
-                       '.rendered_html', '@media', '.navbar', 'nav.navbar', '.navbar-text',
-                       'code', 'pre', 'div.text_cell_render']
-            style_list = [i for i in style_list if len(list(filter(i.startswith, exclude))) == 0]
+            exclude = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'ul',
+                       'ol', 'li', '.rendered_html', '@media', '.navbar',
+                       'nav.navbar', '.navbar-text', 'code', 'pre',
+                       'div.text_cell_render']
+            style_list = [i for i in style_list if
+                          len(list(filter(i.startswith, exclude))) == 0]
             ans = '\n'.join(style_list)
             return '<style type=\"text/css\">{0}</style>'.format(ans)
-
+        
         css = '\n'.join(filter_tags(css) for css in info['inlining']['css'])
         css = CUSTOM_CSS + css
         body = css + body + LATEX_CUSTOM_SCRIPT
-
         return body, metadata
 
 
