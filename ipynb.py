@@ -138,7 +138,7 @@ class IPythonNB(BaseReader):
         filename = os.path.basename(filepath)
         metadata_filename = filename.split('.')[0] + '.ipynb-meta'
         metadata_filepath = os.path.join(filedir, metadata_filename)
-
+        
         # Load metadata
         if os.path.exists(metadata_filepath):
             # Metadata is on a external file, process using Pelican MD Reader
@@ -162,15 +162,8 @@ class IPythonNB(BaseReader):
                                 filters={'highlight2html': custom_highlighter})
 
         content, info = exporter.from_filename(filepath)
-
-        if BeautifulSoup:
-           soup = BeautifulSoup(content)
-           for i in soup.findAll("div", {"class" : "input"}):
-                if i.findChildren()[1].find(text='#ignore') is not None:
-                    i.extract()
-        else:
-            soup = content
-
+        soup = content
+        print("woot")
         # Process using Pelican HTMLReader
         content = '<body>' + soup + '</body>'  # So Pelican HTMLReader works
         parser = MyHTMLParser(self.settings, filename)
@@ -178,7 +171,6 @@ class IPythonNB(BaseReader):
         parser.close()
         body = parser.body
         summary = parser.summary
-
         metadata['summary'] = summary
 
         # Remove some CSS styles, so it doesn't break the themes.
@@ -191,7 +183,7 @@ class IPythonNB(BaseReader):
             style_list = [i for i in style_list if
                           len(list(filter(i.startswith, exclude))) == 0]
             ans = '\n'.join(style_list)
-            return '<style type=\"text/css\">{0}</style>'.format(ans)
+            return '<style type=\"text/css\">' + ans + '</style>'
         
         css = '\n'.join(filter_tags(css) for css in info['inlining']['css'])
         css = CUSTOM_CSS + css
