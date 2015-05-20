@@ -132,13 +132,11 @@ class IPythonNB(BaseReader):
     def read(self, filepath):
         logger.info(2)
         metadata = {}
-
         # Files
         filedir = os.path.dirname(filepath)
         filename = os.path.basename(filepath)
         metadata_filename = filename.split('.')[0] + '.ipynb-meta'
         metadata_filepath = os.path.join(filedir, metadata_filename)
-        
         # Load metadata
         if os.path.exists(metadata_filepath):
             # Metadata is on a external file, process using Pelican MD Reader
@@ -153,13 +151,14 @@ class IPythonNB(BaseReader):
                 del metadata[key]
                 key = key.lower()
                 metadata[key] = self.process_metadata(key, value)
+        
 
         metadata['ipython'] = True
         # Convert ipython notebook to html
         config = Config({'CSSHTMLHeaderTransformer': {'enabled': True,
                          'highlight_class': '.highlight-ipynb'}})
         exporter = HTMLExporter(config=config, template_file='basic',
-                                filters={'highlight2html': custom_highlighter})
+                        filters={'highlight2html': custom_highlighter})
 
         content, info = exporter.from_filename(filepath)
         soup = content
